@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Graph Visualizer</title>
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/vis-network@9.1.2/standalone/umd/vis-network.min.js"
+    ></script>
+    <link rel="stylesheet" href="../stylesheets/graph_style.css" />
+  </head>
+  <body>
+    <h1 id="title">Graph Visualizer  <a href="/" class="home">Home</a> <a href="/logout" class="home">Logout</a></h1>
+    <div id="item">
+      <div id="network"></div>
+      <div id="card">
+        <h4 id="dfs-title">Perform <select name="op" id="opselect">
+           <option value="dfs">DFS</option>
+           <option value="bfs">BFS</option>
+        </select></h4>
+        <form>
+          <label class="iplabel">Select the starting node : </label>
+          <select id="startnode">
+            <%for(let i=1;i<=Nodes.length;i++){%>
+            <option value=<%=i%>><%=i%></option>
+            <%}%>
+          </select>
+          <button type="submit" id="startbtn">Start</button>
+        </form>
+        <div id="result">
+          <h3 id="result-title"> Result</h3>
+          <p id="dfsresult"></p>
+        </div>
+      </div>
+    </div>
+    <script>
+      const rawnodes = <%- JSON.stringify(Nodes) %>;
+      const rawedges = <%- JSON.stringify(Edges) %>;
+
+    </script>
+    <script src="../javascripts/graph.js"></script>
+  </body>
+</html>

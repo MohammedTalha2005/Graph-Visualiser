@@ -1,0 +1,102 @@
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #f4f6f9;
+  font-family: sans-serif;
+  color: #333333;
+}
+
+#network {
+  width: 700px;
+  height: 500px;
+  border: 3px solid #9ca1a9;
+  margin-left: 5px;
+  margin-top: 5px;
+}
+
+#title {
+  height: 30px;
+  background-color: #1f2937;
+  color: #ffff;
+  font-weight: bold;
+  font-size: 24px;
+  margin: 0;
+  padding: 8px 10px;
+  display: flex;
+  justify-content: space-evenly;
+}
+
+#item {
+  display: flex;
+}
+
+#card {
+  width: 500px;
+  height: 500px;
+  border: 3px solid #9ca1a9;
+  margin-left: 5px;
+  margin-top: 5px;
+}
+
+#startnode{
+    width: 100px;
+    padding: 5px 7px;
+    border-radius: 8%;
+}
+
+.iplabel{
+    margin-left: 10px;
+}
+
+#startbtn{
+    display: block;
+    width:fit-content;
+    margin: 20px;
+    padding: 7px 30px;
+    border-radius: 8%;
+    outline: none;
+    border: solid 1px rgb(37, 184, 220);
+    background-color: rgb(71, 107, 207);
+    color: #ffff;
+    font-weight: bold;
+    font-size: large;
+}
+
+#startbtn:hover{
+    background-color:rgb(79, 102, 164) ;
+}
+
+#dfs-title{
+    background-color: rgb(70, 70, 145);
+    color: #ffff;
+    margin: 0;
+    margin-bottom: 10px;
+    text-align: center;
+    padding: 10px;
+}
+
+#result{
+    padding: 0px 15px;
+}
+
+#result-title{
+    text-decoration: underline;
+    padding: 5px 10px;
+}
+
+#opselect{
+   padding: 2px;
+   border-radius: 8%;
+   outline: none;
+}
+
+.home{
+  background-color: rgb(57, 230, 230);
+  padding: 0px 2px;
+  border-radius: 5%;
+  text-decoration: none;
+  font-size: medium;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

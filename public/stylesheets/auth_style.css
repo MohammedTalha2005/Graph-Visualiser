@@ -1,0 +1,51 @@
+body{
+    margin: 0;
+    padding: 0;
+    height:100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #e8f5e9;
+}
+h1{
+    padding: 20px 10px;
+    width:98.5%;
+    margin: 0;
+    text-align: center;
+    font-size:  40px;
+}
+#card{
+    height: 280px;
+    width: 400px;
+    border:solid 4px #1a1a ;
+    border-radius: 8%;
+    background-color: #a2fccc;
+    padding: 20px;
+    display: flex;
+    flex-direction:column;
+
+}
+input,button{
+    display: block;
+    width: 100%;
+    padding:8px 0px;
+    margin: 5px 0;
+    font-weight: 600;
+}
+label{
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+button{
+    font-size: large;
+    color: #ffffff;
+    background-color: #16a085;
+    margin-bottom: 8px;
+}
+button:hover{
+    background-color: #138d75;
+}
+input:focus{
+    outline: none;
+}

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>DFS Graph Visualizer with Random Generator</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 20px; background: #f0f0f0; }
+    .container { display: flex; gap: 20px; max-width: 1400px; margin: auto; flex-wrap: wrap; }
+    .graph-container { flex: 2 1 600px; background: white; border-radius: 10px; box-shadow: 0 0 10px #ccc; padding: 10px; }
+    .controls { flex: 1 1 300px; display: flex; flex-direction: column; gap: 1rem; }
+    input, select, button, textarea {
+      padding: 0.6rem; border-radius: 5px; border: 1px solid #ccc; width: 100%; box-sizing: border-box;
+      font-family: inherit;
+    }
+    button { background: #007bff; color: white; cursor: pointer; border: none; }
+    button:hover { background: #0056b3; }
+    .info { background: white; padding: 1rem; border-radius: 10px; box-shadow: 0 0 5px #bbb; white-space: pre-wrap; }
+    svg circle { cursor: pointer; transition: 0.3s; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="graph-container">
+    <svg id="graph-canvas" width="100%" height="600px"></svg>
+  </div>
+
+  <div class="controls">
+    <label>Nodes (comma-separated, e.g. A,B,C):</label>
+    <input type="text" id="node-input" value="A,B,C,D,E,F">
+
+    <label>Edges (format: A-B,B-C,...):</label>
+    <input type="text" id="edge-input" value="A-B,A-C,B-D,C-E,E-F">
+
+    <div style="display: flex; gap: 0.5rem;">
+      <button id="build-graph">Build Graph</button>
+      <button id="random-graph">Random Graph</button>
+    </div>
+
+    <label>Start Node:</label>
+    <select id="start-node"></select>
+
+    <div style="display: flex; gap: 0.5rem;">
+      <button id="start">Start DFS</button>
+      <button id="prev">◄ Prev</button>
+      <button id="next">Next ►</button>
+    </div>
+
+    <div class="info">
+      <strong>Visited Stack:</strong>
+      <div id="stack-display"></div>
+      <hr>
+      <strong>Parent Relationships:</strong>
+      <div id="parent-display"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const svg = d3.select("#graph-canvas");
+  const width = svg.node().clientWidth;
+  const height = svg.node().clientHeight;
+
+  let graph = { nodes: [], links: [] };
+  let simulation;
+  let nodeElements, linkElements, labelElements;
+  let dfsGenerator, history = [], currentStep = -1;
+
+  document.getElementById("build-graph").addEventListener("click", () => {
+    const nodeInput = document.getElementById("node-input").value.trim();
+    const edgeInput = document.getElementById("edge-input").value.trim();
+    const nodeIds = nodeInput.split(",").map(n => n.trim()).filter(Boolean);
+    const edgePairs = edgeInput.split(",").map(e => e.trim().split("-")).filter(p => p.length === 2);
+
+    graph.nodes = nodeIds.map(id => ({ id }));
+    graph.links = edgePairs.map(([source, target]) => ({ source, target }));
+
+    updateStartNodeOptions(nodeIds);
+    buildGraph();
+  });
+
+  document.getElementById("random-graph").addEventListener("click", () => {
+    const nodeCount = 6;
+    const nodeIds = Array.from({ length: nodeCount }, (_, i) => String.fromCharCode(65 + i));
+    const edges = new Set();
+    
+    // Add random number of edges (between 6 and 10)
+    const edgeCount = Math.floor(Math.random() * 5) + 6;
+    while (edges.size < edgeCount) {
+      const a = nodeIds[Math.floor(Math.random() * nodeIds.length)];
+      const b = nodeIds[Math.floor(Math.random() * nodeIds.length)];
+      if (a !== b) {
+        const key = a < b ? `${a}-${b}` : `${b}-${a}`;
+        edges.add(key);
+      }
+    }
+
+    document.getElementById("node-input").value = nodeIds.join(",");
+    document.getElementById("edge-input").value = Array.from(edges).join(",");
+
+    document.getElementById("build-graph").click(); // Trigger build
+  });
+
+  function updateStartNodeOptions(nodes) {
+    const select = document.getElementById("start-node");
+    select.innerHTML = "";
+    nodes.forEach(n => {
+      const opt = document.createElement("option");
+      opt.value = opt.textContent = n;
+      select.appendChild(opt);
+    });
+  }
+
+  function buildGraph() {
+    svg.selectAll("*").remove();
+
+    const idToNode = Object.fromEntries(graph.nodes.map(n => [n.id, n]));
+    graph.links = graph.links.map(l => ({
+      source: idToNode[l.source],
+      target: idToNode[l.target]
+    }));
+
+    simulation = d3.forceSimulation(graph.nodes)
+      .force("link", d3.forceLink(graph.links).id(d => d.id).distance(100))
+      .force("charge", d3.forceManyBody().strength(-400))
+      .force("center", d3.forceCenter(width / 2, height / 2));
+
+    linkElements = svg.append("g")
+      .selectAll("line")
+      .data(graph.links)
+      .join("line")
+      .attr("stroke", "#aaa")
+      .attr("stroke-width", 2);
+
+    nodeElements = svg.append("g")
+      .selectAll("circle")
+      .data(graph.nodes)
+      .join("circle")
+      .attr("r", 20)
+      .attr("fill", "#fff")
+      .attr("stroke", "#333")
+      .attr("stroke-width", 2)
+      .call(d3.drag()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended));
+
+    labelElements = svg.append("g")
+      .selectAll("text")
+      .data(graph.nodes)
+      .join("text")
+      .text(d => d.id)
+      .attr("text-anchor", "middle")
+      .attr("dy", "0.3em")
+      .attr("font-size", "14px");
+
+    simulation.on("tick", () => {
+      linkElements
+        .attr("x1", d => d.source.x)
+        .attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x)
+        .attr("y2", d => d.target.y);
+
+      nodeElements
+        .attr("cx", d => d.x)
+        .attr("cy", d => d.y);
+
+      labelElements
+        .attr("x", d => d.x)
+        .attr("y", d => d.y);
+    });
+
+    document.getElementById("start").click(); // Auto-start DFS after build
+  }
+
+  function dragstarted(event) {
+    if (!event.active) simulation.alphaTarget(0.3).restart();
+    event.subject.fx = event.subject.x;
+    event.subject.fy = event.subject.y;
+  }
+
+  function dragged(event) {
+    event.subject.fx = event.x;
+    event.subject.fy = event.y;
+  }
+
+  function dragended(event) {
+    if (!event.active) simulation.alphaTarget(0);
+    event.subject.fx = null;
+    event.subject.fy = null;
+  }
+
+  function* dfs(startNodeId) {
+    const visited = new Map();
+    const stack = [{ node: startNodeId, parent: null }];
+    const traversalOrder = [];
+
+    while (stack.length > 0) {
+      const { node: current, parent } = stack.pop();
+      if (!visited.has(current)) {
+        visited.set(current, parent);
+        traversalOrder.push(current);
+
+        const neighbors = graph.links
+          .filter(l => l.source.id === current || l.target.id === current)
+          .map(l => (l.source.id === current ? l.target.id : l.source.id));
+
+        for (const neighbor of neighbors.reverse()) {
+          if (!visited.has(neighbor)) {
+            stack.push({ node: neighbor, parent: current });
+          }
+        }
+
+        yield { current, visited: new Map(visited), traversalOrder };
+      }
+    }
+    return traversalOrder;
+  }
+
+  document.getElementById("start").addEventListener("click", () => {
+    const startNode = document.getElementById("start-node").value;
+    dfsGenerator = dfs(startNode);
+    history = [];
+    currentStep = -1;
+    stepForward();
+  });
+
+  document.getElementById("next").addEventListener("click", stepForward);
+  document.getElementById("prev").addEventListener("click", stepBackward);
+
+  function stepForward() {
+    if (!dfsGenerator) return;
+    if (currentStep < history.length - 1) {
+      currentStep++;
+      updateVisuals(history[currentStep]);
+      return;
+    }
+
+    const result = dfsGenerator.next();
+    if (result.done) return;
+
+    history.push(result.value);
+    currentStep++;
+    updateVisuals(result.value);
+  }
+
+  function stepBackward() {
+    if (currentStep <= 0) return;
+    currentStep--;
+    updateVisuals(history[currentStep]);
+  }
+
+  function updateVisuals(state) {
+    if (!state) return;
+
+    nodeElements.attr("fill", d => {
+      if (d.id === state.current) return "#ffd700";
+      if (state.visited.has(d.id)) return "#2196f3";
+      return "#fff";
+    });
+
+    document.getElementById("stack-display").textContent = state.traversalOrder.join(" → ");
+    document.getElementById("parent-display").textContent = Array.from(state.visited.entries())
+      .map(([child, parent]) => `${child} ← ${parent ?? "root"}`).join("\n");
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Graph visualizer | Home</title>
+    <link rel="stylesheet" href="../stylesheets/home_style.css" />
+  </head>
+  <body>
+    <div id="card">
+      <h1>Welcome to Graph Visualizer</h1>
+      <h2>Visualize and explore graph DFS traversal</h2>
+      <form action="/" method="post">
+        <input
+          type="number"
+          name="nodes"
+          placeholder="Enter number of nodes"
+          required
+        />
+        <textarea
+          name="edges"
+          placeholder="Enter edges in the form (from to weight)
+example : 
+1 2 3
+4 5 6 "
+          required
+        ></textarea>
+        <button type="submit">Visualize</button>
+      </form>
+    </div>
+  </body>
+</html>
