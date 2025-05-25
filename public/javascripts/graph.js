@@ -107,7 +107,7 @@ function delay(ms) {
 //  dfs
 async function dfs(node,visited,adj){
    if(visited[node])return;
-   await delay(1000);
+   await delay(5000);
     nodes.update({
       id: String(node),
       color: {
